@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"log"
 	"os"
 )
 
@@ -16,6 +17,7 @@ func ReadBox(file *os.File) (*MP4Box, error) {
 
 	err := binary.Read(file, binary.BigEndian, &size)
 	if err != nil {
+		log.Printf("Failed to read box size: %v", err)
 		return nil, err
 	}
 
@@ -23,6 +25,7 @@ func ReadBox(file *os.File) (*MP4Box, error) {
 
 	_, err = file.Read(typeBytes)
 	if err != nil {
+		log.Printf("Failed to read box type: %v", err)
 		return nil, err
 	}
 	boxType := string(typeBytes)
@@ -31,9 +34,11 @@ func ReadBox(file *os.File) (*MP4Box, error) {
 	data := make([]byte, dataSize)
 	_, err = file.Read(data)
 	if err != nil {
+		log.Printf("Failed to read box data: %v", err)
 		return nil, err
 	}
 
+	log.Printf("Successfully read box: Type=%s, Size=%d", boxType, size)
 	return &MP4Box{
 		Size: size,
 		Type: boxType,
