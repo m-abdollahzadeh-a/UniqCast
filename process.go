@@ -9,20 +9,24 @@ import (
 	"path/filepath"
 )
 
+const (
+	natsURL             = nats.DefaultURL
+	mp4FilePathsTopic   = "mp4FilePaths"
+	initialSegmentTopic = "InitialSegmentFilePaths"
+	channelBufferSize   = 1024
+)
+
 func process() {
-	nc, err := nats.Connect(nats.DefaultURL)
+	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer nc.Close()
 
-	subject := "mp4FilePaths"
-	pubilshSubject := "InitialSegmentFilePaths"
-
-	msgChan := make(chan *nats.Msg, 1024) // Buffered channel to avoid blocking
+	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
 
 	// Subscribe to the NATS subject using ChanSubscribe
-	sub, err := nc.ChanSubscribe(subject, msgChan)
+	sub, err := nc.ChanSubscribe(mp4FilePathsTopic, msgChan)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +37,7 @@ func process() {
 		sub.Unsubscribe()
 	}()
 
-	fmt.Println("Subscribed to", subject)
+	fmt.Println("Subscribed to", mp4FilePathsTopic)
 
 	for msg := range msgChan {
 		filePath := string(msg.Data)
@@ -51,7 +55,7 @@ func process() {
 		}
 
 		resultPath := writeResultIntoFile("output.mp4", boxes)
-		nc.Publish(pubilshSubject, []byte(resultPath))
+		nc.Publish(initialSegmentTopic, []byte(resultPath))
 	}
 }
 
