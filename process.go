@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/nats-io/nats.go"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func process() {
@@ -15,6 +17,7 @@ func process() {
 	defer nc.Close()
 
 	subject := "mp4FilePaths"
+	pubilshSubject := "InitialSegmentFilePaths"
 
 	msgChan := make(chan *nats.Msg, 1024) // Buffered channel to avoid blocking
 
@@ -47,14 +50,12 @@ func process() {
 
 		}
 
-		err = writeResultIntoFile("output.mp4", boxes)
-		if err != nil {
-			return
-		}
+		resultPath := writeResultIntoFile("output.mp4", boxes)
+		nc.Publish(pubilshSubject, []byte(resultPath))
 	}
 }
 
-func writeResultIntoFile(fileName string, boxes []*MP4Box) error {
+func writeResultIntoFile(fileName string, boxes []*MP4Box) string {
 	file, err := os.Create(fileName)
 	if err != nil {
 		panic(err)
@@ -72,7 +73,8 @@ func writeResultIntoFile(fileName string, boxes []*MP4Box) error {
 			panic(err)
 		}
 	}
-	return nil
+	resultPath, err := filepath.Abs(fileName)
+	return resultPath
 }
 
 func writeBox(file *os.File, box *MP4Box) error {
