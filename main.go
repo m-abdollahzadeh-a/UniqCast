@@ -1,18 +1,14 @@
 package main
 
-import (
-	"fmt"
-)
+//import (
+//	"fmt"
+//	"github.com/nats-io/nats.go"
+//	"log"
+//)
 
 func main() {
-	filePath := "../video.mp4"
-	boxes, err := ExtractInitializationSegment(filePath)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	//filePath := "../video.mp4"
 
-	for _, box := range boxes {
-		fmt.Printf("MP4Box Type: %s, Size: %d\n", box.Type, box.Size)
-	}
+	process()
+
 }
