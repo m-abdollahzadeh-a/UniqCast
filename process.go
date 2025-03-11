@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"github.com/nats-io/nats.go"
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 const (
@@ -16,7 +18,7 @@ const (
 	channelBufferSize   = 1024
 )
 
-func process() {
+func process(ctx context.Context) error {
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		log.Fatal(err)
@@ -39,24 +41,49 @@ func process() {
 
 	fmt.Println("Subscribed to", mp4FilePathsTopic)
 
-	for msg := range msgChan {
-		filePath := string(msg.Data)
-		fmt.Printf("Received file path: %s\n", filePath)
+	var wg sync.WaitGroup
+	defer wg.Wait()
 
-		boxes, err := ExtractInitializationSegment(filePath)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Shutting down...")
+			return nil
+		case msg, ok := <-msgChan:
+			if !ok {
+				log.Println("Message channel closed")
+				return nil
+			}
+
+			wg.Add(1)
+			go func(msg *nats.Msg) {
+				defer wg.Done()
+				if err := handleMessage(nc, msg); err != nil {
+					log.Printf("Error handling message: %v\n", err)
+				}
+			}(msg)
 		}
-
-		for _, box := range boxes {
-			fmt.Printf("MP4Box Type: %s, Size: %d\n", box.Type, box.Size)
-
-		}
-
-		resultPath := writeResultIntoFile("output.mp4", boxes)
-		nc.Publish(initialSegmentTopic, []byte(resultPath))
 	}
+}
+
+func handleMessage(nc *nats.Conn, msg *nats.Msg) error {
+	filePath := string(msg.Data)
+	fmt.Printf("Received file path: %s\n", filePath)
+
+	boxes, err := ExtractInitializationSegment(filePath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil
+	}
+
+	for _, box := range boxes {
+		fmt.Printf("MP4Box Type: %s, Size: %d\n", box.Type, box.Size)
+
+	}
+
+	resultPath := writeResultIntoFile("output.mp4", boxes)
+	nc.Publish(initialSegmentTopic, []byte(resultPath))
+	return nil
 }
 
 func writeResultIntoFile(fileName string, boxes []*MP4Box) string {
