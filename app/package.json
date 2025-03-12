@@ -2,5 +2,9 @@
   "name": "app",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "nats": "^2.29.2"
+  }
 }
