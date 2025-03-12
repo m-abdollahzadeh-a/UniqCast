@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"github.com/nats-io/nats.go"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
@@ -82,7 +84,21 @@ func handleMessage(nc *nats.Conn, msg *nats.Msg) error {
 	}
 
 	resultPath := writeResultIntoFile("output.mp4", boxes)
-	nc.Publish(initialSegmentTopic, []byte(resultPath))
+
+	// TODO: do it also for all failed states
+	resultMessage := &processedFileMessage{
+		FileName:   filePath,
+		StatusCode: http.StatusOK,
+		Message:    "Successful",
+		ResultPath: resultPath,
+	}
+	byteArray, err := json.Marshal(resultMessage)
+	if err != nil {
+		fmt.Println("Error marshaling to JSON:", err)
+		return nil
+	}
+
+	nc.Publish(initialSegmentTopic, byteArray)
 	return nil
 }
 
