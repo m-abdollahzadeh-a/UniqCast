@@ -2,9 +2,9 @@ const { connect } = require('nats');
 
 let nc;
 
-const connectToNATS = async () => {
+const connectToNATS = async (nc_url) => {
     try {
-        nc = await connect({ servers: 'nats://localhost:4222' }); // Replace with your NATS server URL
+        nc = await connect({ servers: nc_url });
         console.log('Connected to NATS');
         return nc;
     } catch (err) {

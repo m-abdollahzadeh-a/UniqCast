@@ -1,21 +1,21 @@
-const { publishMessage } = require('./natsHandler');
+const {publishMessage} = require('./natsHandler');
 
-const handleStart = async (req, res) => {
-    const { filePath } = req.body;
+const handleStartProcess = async (req, res) => {
+    const {filePath} = req.body;
 
     if (!filePath) {
-        return res.status(400).json({ error: 'filePath is required' });
+        return res.status(400).json({error: 'filePath is required'});
     }
 
     try {
         await publishMessage('mp4FilePaths', filePath);
-        res.status(200).json({ message: 'filePath published to NATS successfully' });
+        res.status(200).json({message: 'filePath published to NATS successfully'});
     } catch (err) {
         console.error('Error in handleStart:', err);
-        res.status(500).json({ error: 'Failed to publish to NATS' });
+        res.status(500).json({error: 'Failed to publish to NATS'});
     }
 };
 
 module.exports = {
-    handleStart,
+    handleStartProcess,
 };
