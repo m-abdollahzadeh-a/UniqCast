@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/nats-io/nats.go"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
@@ -36,9 +35,13 @@ func process(ctx context.Context) error {
 	}
 	defer func() {
 		if err := sub.Drain(); err != nil {
-			log.Printf("Error draining subscription: %v\n", err)
+			log.Printf("Error draining topic: %v\n", err)
 		}
-		sub.Unsubscribe()
+		err := sub.Unsubscribe()
+		if err != nil {
+			log.Printf("Error unsubscribing topic: %v\n", err)
+			return
+		}
 	}()
 
 	fmt.Println("Subscribed to", mp4FilePathsTopic)
@@ -60,27 +63,35 @@ func process(ctx context.Context) error {
 			wg.Add(1)
 			go func(msg *nats.Msg) {
 				defer wg.Done()
-				if err := handleMessage(nc, msg); err != nil {
+				resultMessage, err := handleMessage(msg)
+				if err != nil {
 					log.Printf("Error handling message: %v\n", err)
 				}
+
+				fmt.Println(resultMessage)
+				byteArray, err := json.Marshal(resultMessage)
+				if err != nil {
+					fmt.Println("Error marshaling to JSON:", err)
+				}
+				nc.Publish(initialSegmentTopic, byteArray)
+
 			}(msg)
 		}
 	}
 }
 
-func handleMessage(nc *nats.Conn, msg *nats.Msg) error {
+func handleMessage(msg *nats.Msg) (*processedFileMessage, error) {
 	filePath := string(msg.Data)
 	fmt.Printf("Received file path: %s\n", filePath)
 
 	boxes, err := ExtractInitializationSegment(filePath)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return nil
+		return nil, nil
 	}
 
 	for _, box := range boxes {
 		fmt.Printf("MP4Box Type: %s, Size: %d\n", box.Type, box.Size)
-
 	}
 
 	resultPath := writeResultIntoFile("output.mp4", boxes)
@@ -88,18 +99,11 @@ func handleMessage(nc *nats.Conn, msg *nats.Msg) error {
 	// TODO: do it also for all failed states
 	resultMessage := &processedFileMessage{
 		FileName:   filePath,
-		StatusCode: http.StatusOK,
+		StatusCode: Status(StatusSuccessful),
 		Message:    "Successful",
 		ResultPath: resultPath,
 	}
-	byteArray, err := json.Marshal(resultMessage)
-	if err != nil {
-		fmt.Println("Error marshaling to JSON:", err)
-		return nil
-	}
-
-	nc.Publish(initialSegmentTopic, byteArray)
-	return nil
+	return resultMessage, nil
 }
 
 func writeResultIntoFile(fileName string, boxes []*MP4Box) string {
