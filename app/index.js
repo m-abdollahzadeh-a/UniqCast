@@ -1,6 +1,7 @@
-const express = require('express');
-const {connectToNATS, closeNATSConnection} = require('./handlers/natsHandler');
-const {handleStartProcess, handleListAll, handleDelete, handleListDetail} = require('./handlers/apiHandler');
+const express = require ('express');
+const { connectToNATS, closeNATSConnection } = require ('./handlers/natsHandler.js');
+const { handleStartProcess, handleListAll, handleDelete, handleListDetail } = require ('./handlers/apiHandler.js');
+const { handleWriteToPostgres } = require ('./handlers/postgresHandler.js');
 
 const app = express();
 const port = 3000;
@@ -30,3 +31,5 @@ process.on('SIGINT', async () => {
     await closeNATSConnection();
     process.exit();
 });
+
+handleWriteToPostgres()
