@@ -20,6 +20,7 @@ const (
 )
 
 func process(ctx context.Context) error {
+	// NATs Connection
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		log.Fatal(err)
@@ -27,8 +28,7 @@ func process(ctx context.Context) error {
 	defer nc.Close()
 
 	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
-
-	// Subscribe to the NATS subject using ChanSubscribe
+	// Subscribe to the NATS subject
 	sub, err := nc.ChanSubscribe(mp4FilePathsTopic, msgChan)
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +43,6 @@ func process(ctx context.Context) error {
 			return
 		}
 	}()
-
 	fmt.Println("Subscribed to", mp4FilePathsTopic)
 
 	var wg sync.WaitGroup
@@ -63,69 +62,68 @@ func process(ctx context.Context) error {
 			wg.Add(1)
 			go func(msg *nats.Msg) {
 				defer wg.Done()
-				resultMessage, err := handleMessage(msg)
-				if err != nil {
-					log.Printf("Error handling message: %v\n", err)
-				}
-
-				fmt.Println(resultMessage)
+				resultMessage := handleMessage(msg)
 				byteArray, err := json.Marshal(resultMessage)
 				if err != nil {
 					fmt.Println("Error marshaling to JSON:", err)
 				}
 				nc.Publish(initialSegmentTopic, byteArray)
-
 			}(msg)
 		}
 	}
 }
 
-func handleMessage(msg *nats.Msg) (*processedFileMessage, error) {
+func handleMessage(msg *nats.Msg) *processedFileMessage {
 	filePath := string(msg.Data)
 	fmt.Printf("Received file path: %s\n", filePath)
 
 	boxes, err := ExtractInitializationSegment(filePath)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return nil, nil
+		return &processedFileMessage{
+			FileName:   filePath,
+			StatusCode: Status(StatusFailedProcessing),
+			Message:    fmt.Sprintf("Failed to process init segment: %v", err),
+			ResultPath: "",
+		}
 	}
 
 	for _, box := range boxes {
 		fmt.Printf("MP4Box Type: %s, Size: %d\n", box.Type, box.Size)
 	}
 
-	resultPath := writeResultIntoFile("output.mp4", boxes)
+	resultPath, err := writeResultIntoFile("output.mp4", boxes)
 
-	// TODO: do it also for all failed states
-	resultMessage := &processedFileMessage{
+	if err != nil {
+		return &processedFileMessage{
+			FileName:   filePath,
+			StatusCode: Status(StatusFailedProcessing),
+			Message:    fmt.Sprintf("Failed to write into a file: %v", err),
+			ResultPath: "",
+		}
+	}
+	return &processedFileMessage{
 		FileName:   filePath,
 		StatusCode: Status(StatusSuccessful),
-		Message:    "Successful",
+		Message:    "File processed successfully",
 		ResultPath: resultPath,
 	}
-	return resultMessage, nil
 }
 
-func writeResultIntoFile(fileName string, boxes []*MP4Box) string {
+func writeResultIntoFile(fileName string, boxes []*MP4Box) (string, error) {
 	file, err := os.Create(fileName)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-
-		}
-	}(file)
+	defer file.Close()
 
 	for _, box := range boxes {
 		err := writeBox(file, box)
 		if err != nil {
-			panic(err)
+			return "", err
 		}
 	}
-	resultPath, err := filepath.Abs(fileName)
-	return resultPath
+	return filepath.Abs(fileName)
 }
 
 func writeBox(file *os.File, box *MP4Box) error {
