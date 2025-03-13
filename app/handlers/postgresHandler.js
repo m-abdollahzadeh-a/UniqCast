@@ -1,6 +1,6 @@
 const {subscribeToSubject} = require('./natsHandler.js');
 const {closeNATSConnection, connectToNATS} = require("./natsHandler");
-const {createProtocol, findAllProtocols} = require("../dao/protocol");
+const {createProtocol, findAllProtocols, findDetailProtocol} = require("../dao/protocol");
 
 
 const handleMessage = async (msg) => {
@@ -33,8 +33,13 @@ const handleReadAll = async () => {
     return await findAllProtocols()
 }
 
+const handleReadDetail = async (fileName) => {
+    console.log('Finding file Protocol');
+    return await findDetailProtocol(fileName)
+}
 
 module.exports = {
     handleWriteToPostgres,
-    handleReadAll
+    handleReadAll,
+    handleReadDetail
 }

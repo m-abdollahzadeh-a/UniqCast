@@ -1,6 +1,6 @@
 const Protocol = require("../models/Protocol");
 
-const createProtocol= async (filename, status_code, message,result_path) => {
+const createProtocol = async (filename, status_code, message, result_path) => {
     try {
         const protocol = await Protocol.create({
             fileName: filename,
@@ -23,7 +23,26 @@ const findAllProtocols = async () => {
         console.error('Error finding protocols:', error);
     }
 };
+
+const findDetailProtocol = async (file_name) => {
+    try {
+        const protocol = await Protocol.findOne({
+            where: {fileName: file_name},
+        });
+
+        if (protocol) {
+            console.log('protocol found:', protocol.toJSON());
+            return protocol.toJSON()
+        } else {
+            console.log('protocol not found');
+        }
+    } catch (error) {
+        console.error('Error finding protocol:', error);
+    }
+};
+
 module.exports = {
     createProtocol,
-    findAllProtocols
+    findAllProtocols,
+    findDetailProtocol
 }
