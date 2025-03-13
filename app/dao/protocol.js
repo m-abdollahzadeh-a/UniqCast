@@ -41,8 +41,26 @@ const findDetailProtocol = async (file_name) => {
     }
 };
 
+const deleteProtocol = async (file_name) => {
+    try {
+        const deletedProtocol = await Protocol.destroy({
+            where: { fileName: file_name },
+        });
+
+        if (deletedProtocol) {
+            console.log(`Deleted ${deletedProtocol} Protocol(s) with the file name ${deletedProtocol}`);
+            return deletedProtocol
+        } else {
+            console.log('Protocol not found');
+        }
+    } catch (error) {
+        console.error('Error deleting protocol:', error);
+    }
+};
+
 module.exports = {
     createProtocol,
     findAllProtocols,
-    findDetailProtocol
+    findDetailProtocol,
+    deleteProtocol
 }

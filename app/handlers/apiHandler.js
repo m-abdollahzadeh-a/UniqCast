@@ -1,5 +1,5 @@
 const {publishMessage} = require("./natsHandler.js");
-const {handleReadAll, handleReadDetail} = require("./postgresHandler");
+const {handleReadAll, handleReadDetail, handleDeleteWithFileName} = require("./postgresHandler");
 
 const handleStartProcess = (req, res) => {
     const {filePath} = req.body;
@@ -35,6 +35,17 @@ const handleListDetail = async (req, res) => {
     }
 };
 const handleDelete = async (req, res) => {
+    const {fileName} = req.body;
+    if (!fileName) {
+        return res.status(400).json({error: 'fileName is required'});
+    }
+    try {
+        let deleted = await handleDeleteWithFileName(fileName)
+        res.status(200).json({message: `Deleted: ${deleted}`});
+    } catch (err) {
+        console.error('Error in handleListDetail:', err);
+        res.status(500).json({error: 'Failed to List file process result'});
+    }
 };
 
 module.exports = {
