@@ -1,10 +1,13 @@
-const { subscribeToSubject } = require ('./natsHandler.js');
+const {subscribeToSubject} = require('./natsHandler.js');
 const {closeNATSConnection, connectToNATS} = require("./natsHandler");
+const {createProtocol, findAllProtocols} = require("../dao/protocol");
 
-const handleMessage = (msg) => {
+
+const handleMessage = async (msg) => {
     console.log(`Received message: ${msg.data.toString()}`);
-    // to postgres
 
+    const jsonMessage = JSON.parse(msg.data);
+    await createProtocol(jsonMessage.file_name, jsonMessage.status_code, jsonMessage.Message, jsonMessage.result_path);
 };
 
 const writeResultToPostgres = async () => {
@@ -25,7 +28,13 @@ const handleWriteToPostgres = async () => {
     await writeResultToPostgres();
 };
 
+const handleReadAll = async () => {
+    console.log('Finding All Protocols');
+    return await findAllProtocols()
+}
+
 
 module.exports = {
-    handleWriteToPostgres
+    handleWriteToPostgres,
+    handleReadAll
 }

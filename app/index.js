@@ -1,7 +1,7 @@
-const express = require ('express');
-const { connectToNATS, closeNATSConnection } = require ('./handlers/natsHandler.js');
-const { handleStartProcess, handleListAll, handleDelete, handleListDetail } = require ('./handlers/apiHandler.js');
-const { handleWriteToPostgres } = require ('./handlers/postgresHandler.js');
+const express = require('express');
+const {connectToNATS, closeNATSConnection} = require('./handlers/natsHandler.js');
+const {handleStartProcess, handleListAll, handleDelete, handleListDetail} = require('./handlers/apiHandler.js');
+const {handleWriteToPostgres} = require('./handlers/postgresHandler.js');
 
 const app = express();
 const port = 3000;
@@ -31,5 +31,18 @@ process.on('SIGINT', async () => {
     await closeNATSConnection();
     process.exit();
 });
+
+// Initialize Postgres table and Database
+const sequelize = require('./config/database');
+const Protocol = require("./models/Protocol");
+const syncDatabase = async () => {
+    try {
+        await sequelize.sync({force: true}); // `force: true` will drop the table if it already exists
+        console.log('Database synced successfully.');
+    } catch (error) {
+        console.error('Error syncing database:', error);
+    }
+};
+syncDatabase();
 
 handleWriteToPostgres()

@@ -1,4 +1,5 @@
 const {publishMessage} = require("./natsHandler.js");
+const {handleReadAll} = require("./postgresHandler");
 
 const handleStartProcess = (req, res) => {
     const {filePath} = req.body;
@@ -16,6 +17,8 @@ const handleStartProcess = (req, res) => {
 };
 
 const handleListAll = async (req, res) => {
+    let allProtocols = await handleReadAll()
+    res.status(200).json({message: allProtocols});
 };
 const handleListDetail = async (req, res) => {
 };
