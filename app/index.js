@@ -1,6 +1,6 @@
 const express = require('express');
-const { connectToNATS, closeNATSConnection } = require('./handlers/natsHandler');
-const { handleStartProcess } = require('./handlers/apiHandler');
+const {connectToNATS, closeNATSConnection} = require('./handlers/natsHandler');
+const {handleStartProcess, handleListAll, handleDelete, handleListDetail} = require('./handlers/apiHandler');
 
 const app = express();
 const port = 3000;
@@ -17,7 +17,10 @@ connectToNATS(nc_url)
         process.exit(1);
     });
 
-app.post('/start', handleStartProcess);
+app.post('/process', handleStartProcess);
+app.get('/list/all', handleListAll);
+app.post('/list/detail', handleListDetail);
+app.delete('/delete', handleDelete);
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

@@ -16,6 +16,13 @@ const handleStartProcess = async (req, res) => {
     }
 };
 
+const handleListAll = async (req, res) => {};
+const handleListDetail = async (req, res) => {};
+const handleDelete = async (req, res) => {};
+
 module.exports = {
     handleStartProcess,
+    handleListAll,
+    handleListDetail,
+    handleDelete
 };
