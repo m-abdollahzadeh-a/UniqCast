@@ -13,37 +13,12 @@ import (
 )
 
 const (
-	natsURL             = nats.DefaultURL
-	mp4FilePathsTopic   = "mp4FilePaths"
-	initialSegmentTopic = "InitialSegmentFilePaths"
-	channelBufferSize   = 1024
+	channelBufferSize = 1024
 )
 
-func process(ctx context.Context) error {
-	// NATs Connection
-	nc, err := nats.Connect(natsURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer nc.Close()
+type PublishFunc func(subject string, msg []byte) error
 
-	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
-	sub, err := nc.ChanSubscribe(mp4FilePathsTopic, msgChan)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err := sub.Drain(); err != nil {
-			log.Printf("Error draining topic: %v\n", err)
-		}
-		err := sub.Unsubscribe()
-		if err != nil {
-			log.Printf("Error unsubscribing topic: %v\n", err)
-			return
-		}
-	}()
-	fmt.Println("Subscribed to", mp4FilePathsTopic)
-
+func process(ctx context.Context, msgChan chan *nats.Msg, processResultTopic string, publish PublishFunc) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
@@ -61,18 +36,25 @@ func process(ctx context.Context) error {
 			wg.Add(1)
 			go func(msg *nats.Msg) {
 				defer wg.Done()
-				resultMessage := handleMessage(msg)
-				byteArray, err := json.Marshal(resultMessage)
-				if err != nil {
-					fmt.Println("Error marshaling to JSON:", err)
-				}
-				nc.Publish(initialSegmentTopic, byteArray)
+				processMessage(msg, processResultTopic, publish)
 			}(msg)
 		}
 	}
 }
 
-func handleMessage(msg *nats.Msg) *processedFileMessage {
+func processMessage(msg *nats.Msg, processResultTopic string, publish PublishFunc) {
+	resultMessage := handleExtractionMessage(msg)
+	byteArray, err := json.Marshal(resultMessage)
+	if err != nil {
+		fmt.Println("Error marshaling to JSON:", err)
+		return
+	}
+	if err := publish(processResultTopic, byteArray); err != nil {
+		fmt.Println("Error publishing message:", err)
+	}
+}
+
+func handleExtractionMessage(msg *nats.Msg) *processedFileMessage {
 	filePath := string(msg.Data)
 	fmt.Printf("Received file path: %s\n", filePath)
 

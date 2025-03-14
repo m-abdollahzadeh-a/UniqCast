@@ -2,10 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"github.com/nats-io/nats.go"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+)
+
+const (
+	configFileName = "config.yaml"
 )
 
 func main() {
@@ -19,8 +25,31 @@ func main() {
 		<-sigChan
 		cancel()
 	}()
+	config := loadConfig(configFileName)
 
-	if err := process(ctx); err != nil {
+	nc, err := nats.Connect(config.NatsURL)
+	if err != nil {
+		fmt.Errorf("failed to connect to NATS: %w", err)
+	}
+	defer nc.Close()
+
+	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
+	sub, err := nc.ChanSubscribe(config.Mp4FilePathsTopic, msgChan)
+	if err != nil {
+		fmt.Errorf("failed to subscribe to topic %s: %w", config.Mp4FilePathsTopic, err)
+	}
+	defer drainAndUnsubscribe(sub)
+
+	if err := process(ctx, msgChan, config.ProcessResultTopic, nc.Publish); err != nil {
 		log.Fatalf("Process failed: %v", err)
+	}
+}
+
+func drainAndUnsubscribe(sub *nats.Subscription) {
+	if err := sub.Drain(); err != nil {
+		log.Printf("Error draining topic: %v\n", err)
+	}
+	if err := sub.Unsubscribe(); err != nil {
+		log.Printf("Error unsubscribing topic: %v\n", err)
 	}
 }
