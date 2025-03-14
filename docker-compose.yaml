@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  processor:
+    build: ./MP4Processor
+    environment:
+      - NATS_URL=nats://nats:4222
+    volumes:
+      - /tmp:/tmp  # NOTE: The processor needs to access to files on filesystem
+    depends_on:
+      - nats
+
   nats:
     image: nats:2.9.22
     container_name: nats
