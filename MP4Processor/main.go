@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/nats-io/nats.go"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-
-	"github.com/nats-io/nats.go"
 
 	"MP4Processor/config"
 	"MP4Processor/model"
