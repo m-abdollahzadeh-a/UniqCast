@@ -12,8 +12,9 @@ setupSwagger(app);
 const {PORT: port = 3000,} = process.env;
 
 app.use(express.json());
+const {nc_url} = require("./config/nats");
 
-connectToNATS()
+connectToNATS(nc_url)
     .then(() => {
         console.log('NATS connection established');
     })
@@ -226,7 +227,6 @@ process.on('SIGINT', async () => {
 // Initialize Postgres table and Database
 const sequelize = require('./config/database');
 const Protocol = require("./models/Protocol");
-const {nc_url} = require("./config/nats");
 const syncDatabase = async () => {
     try {
         await sequelize.sync({force: true}); // `force: true` will drop the table if it already exists
