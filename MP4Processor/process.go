@@ -43,7 +43,7 @@ func process(ctx context.Context, msgChan chan *nats.Msg, processResultTopic str
 }
 
 func processMessage(msg *nats.Msg, processResultTopic string, publish PublishFunc) {
-	resultMessage := handleExtractionMessage(msg)
+	resultMessage := handleExtractionMessage(msg.Data)
 	byteArray, err := json.Marshal(resultMessage)
 	if err != nil {
 		fmt.Println("Error marshaling to JSON:", err)
@@ -54,8 +54,7 @@ func processMessage(msg *nats.Msg, processResultTopic string, publish PublishFun
 	}
 }
 
-func handleExtractionMessage(msg *nats.Msg) *processedFileMessage {
-	filePath := string(msg.Data)
+func handleExtractionMessage(filePath string) *processedFileMessage {
 	fmt.Printf("Received file path: %s\n", filePath)
 
 	boxes, err := ExtractInitializationSegment(filePath)
