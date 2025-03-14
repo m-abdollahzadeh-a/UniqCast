@@ -37,7 +37,7 @@ func main() {
 	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
 	sub, err := nc.ChanSubscribe(config.Mp4FilePathsTopic, msgChan)
 	if err != nil {
-		panic(fmt.Sprintf("failed to subscribe to topic %s: %w", config.Mp4FilePathsTopic, err)
+		panic(fmt.Sprintf("failed to subscribe to topic %s: %v", config.Mp4FilePathsTopic, err))
 	}
 	defer drainAndUnsubscribe(sub)
 
