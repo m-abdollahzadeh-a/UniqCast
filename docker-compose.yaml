@@ -3,6 +3,7 @@ version: '3.8'
 services:
   processor:
     build: ./MP4Processor
+    container_name: processor
     environment:
       - NATS_URL=nats://nats:4222
     volumes:
@@ -10,6 +11,23 @@ services:
       - /tmp/outputs # NOTE: The processor needs to access to files on filesystem
     depends_on:
       - nats
+
+  nodejs:
+    build: ./app
+    container_name: app
+    environment:
+      - NATS_URL=nats://nats:4222
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=box
+      - DB_PASSWORD=box
+      - DB_NAME=box
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - nats
+      - processor
 
   nats:
     image: nats:2.9.22
