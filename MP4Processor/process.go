@@ -12,7 +12,7 @@ import (
 
 type PublishFunc func(subject string, msg []byte) error
 
-func process(ctx context.Context, msgChan chan *nats.Msg, inputDir, outputDir, processResultTopic string, publish PublishFunc) error {
+func process(ctx context.Context, msgChan chan *nats.Msg, outputDir, processResultTopic string, publish PublishFunc) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
@@ -27,18 +27,18 @@ func process(ctx context.Context, msgChan chan *nats.Msg, inputDir, outputDir, p
 				return nil
 			}
 
-			fileName := string(msg.Data)
-			inputPath := filepath.Join(inputDir, fileName)
-			outputPath := filepath.Join(outputDir, fileName)
+			inputPath := string(msg.Data)
+			filename := filepath.Base(inputPath)
+			outputPath := filepath.Join(outputDir, filename)
 
 			wg.Add(1)
-			go func(filePath string) {
+			go func(filePath, outputDir, processResultTopic string, publish PublishFunc) {
 				defer wg.Done()
-				err := publishProcessedFileMessage(inputPath, outputPath, processResultTopic, publish)
+				err := publishProcessedFileMessage(filePath, outputPath, processResultTopic, publish)
 				if err != nil {
 					return
 				}
-			}(fileName)
+			}(inputPath, outputPath, processResultTopic, publish)
 		}
 	}
 }

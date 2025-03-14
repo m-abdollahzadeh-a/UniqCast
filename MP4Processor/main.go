@@ -41,7 +41,7 @@ func main() {
 	}
 	defer drainAndUnsubscribe(sub)
 
-	if err := process(ctx, msgChan, config.File.InputPath, config.File.OutputPath, config.NATS.ProcessResultTopic, nc.Publish); err != nil {
+	if err := process(ctx, msgChan, config.File.OutputPath, config.NATS.ProcessResultTopic, nc.Publish); err != nil {
 		log.Fatalf("Process failed: %v", err)
 	}
 }
