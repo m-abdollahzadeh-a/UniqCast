@@ -59,3 +59,9 @@ which contains a function to extract the initial segment of data and write it to
 
 In main.go, the processNatsMessage function leverages the capabilities of process.go to locate the initial segment
 and subsequently publishes the outcome through NATs.
+
+
+## HOW TO RUN
+Simply execute docker-compose up --build to get this code up and running! :)
+
+If you don’t have Docker and Docker Compose installed, you can refer to the official [Docker documentation](https://docs.docker.com/engine/install/) for installation instructions.
