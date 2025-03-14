@@ -21,7 +21,6 @@ type NATS struct {
 }
 
 type File struct {
-	InputPath  string
 	OutputPath string
 }
 
@@ -31,7 +30,6 @@ func LoadConfig() (*Config, error) {
 	fs.String("nats-file-path-topic", "mp4FilePaths", "nats file path topic")
 	fs.String("nats-process-result-topic", "InitialSegmentFilePaths", "nats process result topic")
 	fs.Int("nats-buffer-size", 1024, "nats channel buffer size")
-	fs.String("file-input-path", "/tmp/inputs/", "file input path")
 	fs.String("file-output-path", "/tmp/outputs/", "file output path")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		// printUsage(f)
@@ -66,7 +64,6 @@ func loadNats(v *viper.Viper) NATS {
 
 func loadFile(v *viper.Viper) File {
 	return File{
-		InputPath:  v.GetString("file-input-path"),
 		OutputPath: v.GetString("file-output-path"),
 	}
 }
