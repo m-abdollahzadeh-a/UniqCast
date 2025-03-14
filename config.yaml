@@ -1,8 +1,0 @@
----
-nats:
-  natsURL: "http://localhost:4222"
-  mp4FilePathsTopic: "mp4FilePaths"
-  processResultTopic: "InitialSegmentFilePaths"
-file:
-  inputPath: /tmp/inputs/
-  outputPath: /tmp/outputs/
