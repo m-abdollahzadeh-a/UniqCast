@@ -28,7 +28,6 @@ func process(ctx context.Context) error {
 	defer nc.Close()
 
 	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
-	// Subscribe to the NATS subject
 	sub, err := nc.ChanSubscribe(mp4FilePathsTopic, msgChan)
 	if err != nil {
 		log.Fatal(err)
