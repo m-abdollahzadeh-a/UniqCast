@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  nats:
+    image: nats:2.9.22
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: --http_port 8222
+
+  postgres:
+    image: postgres
+    container_name: box
+    environment:
+      POSTGRES_USER: box
+      POSTGRES_PASSWORD: box
+      POSTGRES_DB: box
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
