@@ -29,6 +29,39 @@ It then sends a message back through NATS with one of two statuses:
 - **Successful**: Indicates the file was processed successfully.
 - **Failed**: Indicates an error occurred during processing, along with a related message.
 
+## App Structure
+The application is developed using **Node.js** with the **Yarn** package manager.
+
+The **config section** handles database configurations, reading settings from environment variables.
+
+The **DAO (Data Access Object)** is responsible for interacting with the database models to store or retrieve data.
+
+The **model section** includes the **Protocol** model, which represents the message received as a response from the processor.
+
+The **handlers** are divided into three main parts:
+- **API Handler**: Manages user requests across four routes and uses postgresHandler functions to respond to users.
+- **Postgres Handler**: Utilizes the DAO to read from and write to the PostgreSQL database.
+- **NATS Handler**: A utility that facilitates connecting to, subscribing to, and publishing messages over NATs.
+
+```
+.
+├── config
+│   └── database.js
+├── dao
+│   └── protocol.js
+├── Dockerfile
+├── handlers
+│   ├── apiHandler.js
+│   ├── natsHandler.js
+│   └── postgresHandler.js
+├── index.js
+├── models
+│   └── Protocol.js
+├── package.json
+├── swagger.js
+└── yarn.lock
+```
+
 ## Processor Structure
 As you can see in the tree bellow the processor has three main section: config, model, processor
 ```
