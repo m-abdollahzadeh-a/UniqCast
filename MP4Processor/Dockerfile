@@ -9,6 +9,6 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o processor .
+RUN go build -o main .
 
-CMD ["./processor"]
+CMD ["./main"]
