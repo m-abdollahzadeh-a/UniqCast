@@ -34,41 +34,27 @@ func process(ctx context.Context, msgChan chan *nats.Msg, inputDir, outputDir, p
 			wg.Add(1)
 			go func(filePath string) {
 				defer wg.Done()
-				publishProcessedFileMessage(inputPath, outputPath, processResultTopic, publish)
+				err := publishProcessedFileMessage(inputPath, outputPath, processResultTopic, publish)
+				if err != nil {
+					return
+				}
 			}(fileName)
 		}
 	}
 }
 
-func publishProcessedFileMessage(filePath, outputPath, processResultTopic string, publish PublishFunc) {
-	PublishStartProcessingMessage(filePath, processResultTopic, publish)
-
+func publishProcessedFileMessage(filePath, outputPath, processResultTopic string, publish PublishFunc) error {
 	resultMessage := handleExtractionMessage(filePath, outputPath)
 	byteArray, err := json.Marshal(resultMessage)
 	if err != nil {
 		log.Fatalf("Error marshaling to JSON:%v\n", err)
-		return
+		return err
 	}
 	if err := publish(processResultTopic, byteArray); err != nil {
 		log.Fatalf("Error publishing message: %v\n", err)
+		return err
 	}
-}
-
-func PublishStartProcessingMessage(filePath string, processResultTopic string, publish PublishFunc) {
-	message := &processedFileMessage{
-		FileName:   filePath,
-		StatusCode: Status(StatusProcessing),
-		Message:    fmt.Sprintf("Start processsing"),
-		ResultPath: "",
-	}
-	starProcessingMessage, err := json.Marshal(message)
-	if err != nil {
-		log.Fatalf("Error marshaling start processing message to JSON:%v\n", err)
-		return
-	}
-	if err := publish(processResultTopic, starProcessingMessage); err != nil {
-		log.Fatalf("Error publishing message: %v\n", err)
-	}
+	return nil
 }
 
 func handleExtractionMessage(filePath, outputPath string) *processedFileMessage {
@@ -79,7 +65,7 @@ func handleExtractionMessage(filePath, outputPath string) *processedFileMessage 
 		fmt.Println("Error:", err)
 		return &processedFileMessage{
 			FileName:   filePath,
-			StatusCode: Status(StatusFailed),
+			StatusCode: StatusFailed,
 			Message:    fmt.Sprintf("Failed to process init segment: %v", err),
 			ResultPath: "",
 		}
@@ -94,14 +80,14 @@ func handleExtractionMessage(filePath, outputPath string) *processedFileMessage 
 	if err != nil {
 		return &processedFileMessage{
 			FileName:   filePath,
-			StatusCode: Status(StatusFailed),
+			StatusCode: StatusFailed,
 			Message:    fmt.Sprintf("Failed to write into a file: %v", err),
 			ResultPath: "",
 		}
 	}
 	return &processedFileMessage{
 		FileName:   filePath,
-		StatusCode: Status(StatusSuccessful),
+		StatusCode: StatusSuccessful,
 		Message:    "File processed successfully",
 		ResultPath: resultPath,
 	}
