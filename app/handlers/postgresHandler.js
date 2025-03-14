@@ -1,6 +1,7 @@
 const {subscribeToSubject} = require('./natsHandler.js');
 const {closeNATSConnection, connectToNATS} = require("./natsHandler");
 const {createProtocol, findAllProtocols, findDetailProtocol, deleteProtocol} = require("../dao/protocol");
+const {InitialSegmentFilePaths} = require("../config/nats");
 
 
 const handleMessage = async (msg) => {
@@ -13,7 +14,7 @@ const handleMessage = async (msg) => {
 const writeResultToPostgres = async (nats_url) => {
     try {
         await connectToNATS(nats_url);
-        subscribeToSubject('InitialSegmentFilePaths', handleMessage);
+        subscribeToSubject(InitialSegmentFilePaths, handleMessage);
         process.on('SIGINT', async () => {
             await closeNATSConnection();
             process.exit();

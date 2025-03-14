@@ -1,5 +1,6 @@
 const {publishMessage} = require("./natsHandler.js");
 const {handleReadAll, handleReadDetail, handleDeleteWithID} = require("./postgresHandler");
+const {mp4FilePathsTopic} = require("../config/nats");
 
 const handleStartProcess = (req, res) => {
     const {filePath} = req.body;
@@ -8,7 +9,7 @@ const handleStartProcess = (req, res) => {
         return res.status(400).json({error: 'filePath is required'});
     }
     try {
-        publishMessage('mp4FilePaths', filePath);
+        publishMessage(mp4FilePathsTopic, filePath);
         res.status(200).json({message: 'File started Processing'});
     } catch (err) {
         console.error('Error in handleStart:', err);

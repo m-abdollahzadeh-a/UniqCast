@@ -3,16 +3,17 @@ const {connectToNATS, closeNATSConnection} = require('./handlers/natsHandler.js'
 const {handleStartProcess, handleListAll, handleDelete, handleListDetail} = require('./handlers/apiHandler.js');
 const {handleWriteToPostgres} = require('./handlers/postgresHandler.js');
 const setupSwagger = require('./swagger');
+
 require('dotenv').config();
 
 const app = express();
 setupSwagger(app);
 
-const { PORT: port = 3000, NATS_URL: nc_url = "nats://localhost:4222" } = process.env;
+const {PORT: port = 3000,} = process.env;
 
 app.use(express.json());
 
-connectToNATS(nc_url)
+connectToNATS()
     .then(() => {
         console.log('NATS connection established');
     })
@@ -225,6 +226,7 @@ process.on('SIGINT', async () => {
 // Initialize Postgres table and Database
 const sequelize = require('./config/database');
 const Protocol = require("./models/Protocol");
+const {nc_url} = require("./config/nats");
 const syncDatabase = async () => {
     try {
         await sequelize.sync({force: true}); // `force: true` will drop the table if it already exists
