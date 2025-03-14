@@ -1,6 +1,7 @@
 package main
 
 import (
+	"MP4Processor/config"
 	"context"
 	"fmt"
 	"github.com/nats-io/nats.go"
@@ -11,7 +12,6 @@ import (
 )
 
 const (
-	configFileName    = "config.yaml"
 	channelBufferSize = 1024
 )
 
@@ -27,21 +27,21 @@ func main() {
 		cancel()
 	}()
 
-	config := loadConfig(configFileName)
-	nc, err := nats.Connect(config.NATS.URL)
+	conf, err := config.LoadConfig()
+	nc, err := nats.Connect(conf.NATS.URL)
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to NATS: %v", err))
 	}
 	defer nc.Close()
 
 	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
-	sub, err := nc.ChanSubscribe(config.NATS.Mp4FilePathsTopic, msgChan)
+	sub, err := nc.ChanSubscribe(conf.NATS.Mp4FilePathsTopic, msgChan)
 	if err != nil {
-		panic(fmt.Sprintf("failed to subscribe to topic %s: %v", config.NATS.Mp4FilePathsTopic, err))
+		panic(fmt.Sprintf("failed to subscribe to topic %s: %v", conf.NATS.Mp4FilePathsTopic, err))
 	}
 	defer drainAndUnsubscribe(sub)
 
-	if err := process(ctx, msgChan, config.File.OutputPath, config.NATS.ProcessResultTopic, nc.Publish); err != nil {
+	if err := process(ctx, msgChan, conf.File.OutputPath, conf.NATS.ProcessResultTopic, nc.Publish); err != nil {
 		log.Fatalf("Process failed: %v", err)
 	}
 }
