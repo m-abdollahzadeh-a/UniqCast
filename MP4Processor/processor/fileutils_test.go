@@ -1,9 +1,11 @@
-package main
+package processor
 
 import (
 	"encoding/binary"
 	"os"
 	"testing"
+
+	"MP4Processor/model"
 )
 
 func TestWriteBox(t *testing.T) {
@@ -16,7 +18,7 @@ func TestWriteBox(t *testing.T) {
 	defer os.Remove(tmpFileName)
 
 	// Define test data
-	box := &MP4Box{
+	box := &model.MP4Box{
 		Size: 8,
 		Type: "ftyp",
 		Data: []byte{0x00, 0x01, 0x02, 0x03},
