@@ -3,9 +3,9 @@ package main
 type Status string
 
 const (
-	StatusSuccessful       string = "successful"
-	StatusFailedProcessing string = "failed_processing"
-	StatusProcessing       string = "processing"
+	StatusSuccessful string = "Successful"
+	StatusFailed     string = "Failed"
+	StatusProcessing string = "Processing"
 )
 
 type processedFileMessage struct {

@@ -37,14 +37,33 @@ func process(ctx context.Context, msgChan chan *nats.Msg, processResultTopic str
 }
 
 func publishProcessedFileMessage(filePath string, processResultTopic string, publish PublishFunc) {
+	PublishStartProcessingMessage(filePath, processResultTopic, publish)
+
 	resultMessage := handleExtractionMessage(filePath)
 	byteArray, err := json.Marshal(resultMessage)
 	if err != nil {
-		fmt.Println("Error marshaling to JSON:", err)
+		log.Fatalf("Error marshaling to JSON:%v\n", err)
 		return
 	}
 	if err := publish(processResultTopic, byteArray); err != nil {
-		fmt.Println("Error publishing message:", err)
+		log.Fatalf("Error publishing message: %v\n", err)
+	}
+}
+
+func PublishStartProcessingMessage(filePath string, processResultTopic string, publish PublishFunc) {
+	message := &processedFileMessage{
+		FileName:   filePath,
+		StatusCode: Status(StatusProcessing),
+		Message:    fmt.Sprintf("Start processsing"),
+		ResultPath: "",
+	}
+	starProcessingMessage, err := json.Marshal(message)
+	if err != nil {
+		log.Fatalf("Error marshaling start processing message to JSON:%v\n", err)
+		return
+	}
+	if err := publish(processResultTopic, starProcessingMessage); err != nil {
+		log.Fatalf("Error publishing message: %v\n", err)
 	}
 }
 
@@ -56,7 +75,7 @@ func handleExtractionMessage(filePath string) *processedFileMessage {
 		fmt.Println("Error:", err)
 		return &processedFileMessage{
 			FileName:   filePath,
-			StatusCode: Status(StatusFailedProcessing),
+			StatusCode: Status(StatusFailed),
 			Message:    fmt.Sprintf("Failed to process init segment: %v", err),
 			ResultPath: "",
 		}
@@ -71,7 +90,7 @@ func handleExtractionMessage(filePath string) *processedFileMessage {
 	if err != nil {
 		return &processedFileMessage{
 			FileName:   filePath,
-			StatusCode: Status(StatusFailedProcessing),
+			StatusCode: Status(StatusFailed),
 			Message:    fmt.Sprintf("Failed to write into a file: %v", err),
 			ResultPath: "",
 		}
