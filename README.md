@@ -29,5 +29,33 @@ It then sends a message back through NATS with one of two statuses:
 - **Successful**: Indicates the file was processed successfully.
 - **Failed**: Indicates an error occurred during processing, along with a related message.
 
-## Node.js File Processing API
+## Processor Structure
+As you can see in the tree bellow the processor has three main section: config, model, processor
+```
+├── config
+│   └── config.go
+├── Dockerfile
+├── go.mod
+├── go.sum
+├── main.go
+├── main_test.go
+├── model
+│   ├── box.go
+│   └── message.go
+├── processor
+│   ├── fileutils.go
+│   ├── fileutils_test.go
+│   └── process.go
+```
+The configuration section includes code designed to read settings from command-line arguments or environment variables,
+utilizing the Viper library for this purpose.
 
+The model section is divided into two parts: the box model, which represents the structure of each box within an MP4 file,
+and the message model, which defines the format of the response sent back via NATs to the Node.js application.
+
+The processor component features file utilities that facilitate writing byte arrays to the filesystem.
+The core functionality, however, resides in process.go,
+which contains a function to extract the initial segment of data and write it to a file using these utilities.
+
+In main.go, the processNatsMessage function leverages the capabilities of process.go to locate the initial segment
+and subsequently publishes the outcome through NATs.
