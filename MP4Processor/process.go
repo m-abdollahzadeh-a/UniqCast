@@ -2,13 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/nats-io/nats.go"
 	"log"
-	"os"
-	"path/filepath"
 	"sync"
 )
 
@@ -33,17 +30,18 @@ func process(ctx context.Context, msgChan chan *nats.Msg, processResultTopic str
 				return nil
 			}
 
+			filePath := string(msg.Data)
 			wg.Add(1)
-			go func(msg *nats.Msg) {
+			go func(filePath string) {
 				defer wg.Done()
-				processMessage(msg, processResultTopic, publish)
-			}(msg)
+				publishProcessedFileMessage(filePath, processResultTopic, publish)
+			}(filePath)
 		}
 	}
 }
 
-func processMessage(msg *nats.Msg, processResultTopic string, publish PublishFunc) {
-	resultMessage := handleExtractionMessage(msg.Data)
+func publishProcessedFileMessage(filePath string, processResultTopic string, publish PublishFunc) {
+	resultMessage := handleExtractionMessage(filePath)
 	byteArray, err := json.Marshal(resultMessage)
 	if err != nil {
 		fmt.Println("Error marshaling to JSON:", err)
