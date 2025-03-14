@@ -7,9 +7,16 @@ import (
 )
 
 type Config struct {
-	NatsURL            string `yaml:"natsURL"`
-	Mp4FilePathsTopic  string `yaml:"mp4FilePathsTopic"`
-	ProcessResultTopic string `yaml:"processResultTopic"`
+	NATS struct {
+		URL                string `yaml:"url"`
+		Mp4FilePathsTopic  string `yaml:"mp4FilePathsTopic"`
+		ProcessResultTopic string `yaml:"processResultTopic"`
+	} `yaml:"nats"`
+
+	File struct {
+		InputPath  string `yaml:"inputPath"`
+		OutputPath string `yaml:"outputPath"`
+	} `yaml:"file"`
 }
 
 func loadConfig(filePath string) Config {

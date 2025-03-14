@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"github.com/nats-io/nats.go"
 	"log"
+	"path/filepath"
 	"sync"
 )
 
 type PublishFunc func(subject string, msg []byte) error
 
-func process(ctx context.Context, msgChan chan *nats.Msg, processResultTopic string, publish PublishFunc) error {
+func process(ctx context.Context, msgChan chan *nats.Msg, inputDir, outputDir, processResultTopic string, publish PublishFunc) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
@@ -26,20 +27,23 @@ func process(ctx context.Context, msgChan chan *nats.Msg, processResultTopic str
 				return nil
 			}
 
-			filePath := string(msg.Data)
+			fileName := string(msg.Data)
+			inputPath := filepath.Join(inputDir, fileName)
+			outputPath := filepath.Join(outputDir, fileName)
+
 			wg.Add(1)
 			go func(filePath string) {
 				defer wg.Done()
-				publishProcessedFileMessage(filePath, processResultTopic, publish)
-			}(filePath)
+				publishProcessedFileMessage(inputPath, outputPath, processResultTopic, publish)
+			}(fileName)
 		}
 	}
 }
 
-func publishProcessedFileMessage(filePath string, processResultTopic string, publish PublishFunc) {
+func publishProcessedFileMessage(filePath, outputPath, processResultTopic string, publish PublishFunc) {
 	PublishStartProcessingMessage(filePath, processResultTopic, publish)
 
-	resultMessage := handleExtractionMessage(filePath)
+	resultMessage := handleExtractionMessage(filePath, outputPath)
 	byteArray, err := json.Marshal(resultMessage)
 	if err != nil {
 		log.Fatalf("Error marshaling to JSON:%v\n", err)
@@ -67,7 +71,7 @@ func PublishStartProcessingMessage(filePath string, processResultTopic string, p
 	}
 }
 
-func handleExtractionMessage(filePath string) *processedFileMessage {
+func handleExtractionMessage(filePath, outputPath string) *processedFileMessage {
 	fmt.Printf("Received file path: %s\n", filePath)
 
 	boxes, err := ExtractInitializationSegment(filePath)
@@ -85,7 +89,7 @@ func handleExtractionMessage(filePath string) *processedFileMessage {
 		fmt.Printf("MP4Box Type: %s, Size: %d\n", box.Type, box.Size)
 	}
 
-	resultPath, err := writeResultIntoFile("output.mp4", boxes)
+	resultPath, err := writeResultIntoFile(outputPath, boxes)
 
 	if err != nil {
 		return &processedFileMessage{

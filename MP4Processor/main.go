@@ -28,20 +28,20 @@ func main() {
 	}()
 
 	config := loadConfig(configFileName)
-	nc, err := nats.Connect(config.NatsURL)
+	nc, err := nats.Connect(config.NATS.URL)
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to NATS: %v", err))
 	}
 	defer nc.Close()
 
 	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
-	sub, err := nc.ChanSubscribe(config.Mp4FilePathsTopic, msgChan)
+	sub, err := nc.ChanSubscribe(config.NATS.Mp4FilePathsTopic, msgChan)
 	if err != nil {
-		panic(fmt.Sprintf("failed to subscribe to topic %s: %v", config.Mp4FilePathsTopic, err))
+		panic(fmt.Sprintf("failed to subscribe to topic %s: %v", config.NATS.Mp4FilePathsTopic, err))
 	}
 	defer drainAndUnsubscribe(sub)
 
-	if err := process(ctx, msgChan, config.ProcessResultTopic, nc.Publish); err != nil {
+	if err := process(ctx, msgChan, config.File.InputPath, config.File.OutputPath, config.NATS.ProcessResultTopic, nc.Publish); err != nil {
 		log.Fatalf("Process failed: %v", err)
 	}
 }
