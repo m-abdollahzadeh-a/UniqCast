@@ -24,37 +24,37 @@ const findAllProtocols = async () => {
     }
 };
 
-const findDetailProtocol = async (file_name) => {
+const findDetailProtocol = async (id) => {
     try {
         const protocol = await Protocol.findOne({
-            where: {fileName: file_name},
+            where: {id: id},
         });
 
         if (protocol) {
-            console.log('protocol found:', protocol.toJSON());
+            console.log('Message found:', protocol.toJSON());
             return protocol.toJSON()
         } else {
-            console.log('protocol not found');
+            console.log('Message not found');
         }
     } catch (error) {
-        console.error('Error finding protocol:', error);
+        console.error('Error finding message:', error);
     }
 };
 
-const deleteProtocol = async (file_name) => {
+const deleteProtocol = async (id) => {
     try {
         const deletedProtocol = await Protocol.destroy({
-            where: { fileName: file_name },
+            where: { id: id },
         });
 
         if (deletedProtocol) {
-            console.log(`Deleted ${deletedProtocol} Protocol(s) with the file name ${deletedProtocol}`);
+            console.log(`Deleted ${deletedProtocol} Message(s) with the ID ${deletedProtocol}`);
             return deletedProtocol
         } else {
-            console.log('Protocol not found');
+            console.log('Message not found');
         }
     } catch (error) {
-        console.error('Error deleting protocol:', error);
+        console.error('Error deleting message:', error);
     }
 };
 

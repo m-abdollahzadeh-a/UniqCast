@@ -2,10 +2,14 @@ const express = require('express');
 const {connectToNATS, closeNATSConnection} = require('./handlers/natsHandler.js');
 const {handleStartProcess, handleListAll, handleDelete, handleListDetail} = require('./handlers/apiHandler.js');
 const {handleWriteToPostgres} = require('./handlers/postgresHandler.js');
+const setupSwagger = require('./swagger');
 
 const app = express();
+setupSwagger(app);
+
 const port = 3000;
 const nc_url = "nats://localhost:4222"
+
 
 app.use(express.json());
 
@@ -18,10 +22,148 @@ connectToNATS(nc_url)
         process.exit(1);
     });
 
+
 app.post('/process', handleStartProcess);
+
+/**
+ * @swagger
+ * /list/all:
+ *   get:
+ *     summary: Retrieve a list of all items
+ *     description: Returns a list of all items with their details.
+ *     responses:
+ *       200:
+ *         description: Successful response with a list of items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       fileName:
+ *                         type: string
+ *                         example: "/home/jan/Documents/video.mp4"
+ *                       StatusCode:
+ *                         type: string
+ *                         example: "Successful"
+ *                       Message:
+ *                         type: string
+ *                         example: "File processed successfully"
+ *                       ResultPath:
+ *                         type: string
+ *                         example: "/tmp/outputs/video.mp4"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-03-14T15:30:30.441Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-03-14T15:30:30.441Z"
+ *       500:
+ *         description: Internal server error
+ */
 app.get('/list/all', handleListAll);
-app.post('/list/detail', handleListDetail);
-app.delete('/delete', handleDelete);
+
+/**
+ * @swagger
+ * /list/detail/{id}:
+ *   get:
+ *     summary: Retrieve details of a specific item by ID
+ *     description: Returns the details of an item based on the provided ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the item to retrieve
+ *     responses:
+ *       200:
+ *         description: Successful response with item details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     fileName:
+ *                       type: string
+ *                       example: "/home/jan/Documents/video.mp4"
+ *                     StatusCode:
+ *                       type: string
+ *                       example: "Successful"
+ *                     Message:
+ *                       type: string
+ *                       example: "File processed successfully"
+ *                     ResultPath:
+ *                       type: string
+ *                       example: "/tmp/outputs/video.mp4"
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-03-14T15:30:30.441Z"
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-03-14T15:30:30.441Z"
+ *       404:
+ *         description: Item not found
+ *       500:
+ *         description: Internal server error
+ */
+app.get('/list/detail/:id', handleListDetail);
+
+/**
+ * @swagger
+ * /delete/{id}:
+ *   delete:
+ *     summary: Delete a message by ID
+ *     description: Deletes a message with the specified ID. Returns a success or failure message.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the item to delete
+ *     responses:
+ *       200:
+ *         description: Item successfully deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Deleted"
+ *       404:
+ *         description: Item not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "ID not exists"
+ *       500:
+ *         description: Internal server error
+ */
+app.delete('/delete/:id', handleDelete);
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

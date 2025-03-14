@@ -33,19 +33,19 @@ const handleReadAll = async () => {
     return await findAllProtocols()
 }
 
-const handleReadDetail = async (fileName) => {
-    console.log('Finding file Protocol');
-    return await findDetailProtocol(fileName)
+const handleReadDetail = async (id) => {
+    console.log('Finding file Message');
+    return await findDetailProtocol(id)
 }
 
-const handleDeleteWithFileName = async (fileName) => {
-    console.log('Deleting file Protocol');
-    return await deleteProtocol(fileName)
+const handleDeleteWithID = async (id) => {
+    console.log('Deleting message');
+    return await deleteProtocol(id)
 }
 
 module.exports = {
     handleWriteToPostgres,
     handleReadAll,
     handleReadDetail,
-    handleDeleteWithFileName
+    handleDeleteWithID
 }
