@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	configFileName = "config.yaml"
+	configFileName    = "config.yaml"
+	channelBufferSize = 1024
 )
 
 func main() {
@@ -25,18 +26,18 @@ func main() {
 		<-sigChan
 		cancel()
 	}()
-	config := loadConfig(configFileName)
 
+	config := loadConfig(configFileName)
 	nc, err := nats.Connect(config.NatsURL)
 	if err != nil {
-		fmt.Errorf("failed to connect to NATS: %w", err)
+		panic(fmt.Sprintf("failed to connect to NATS: %v", err))
 	}
 	defer nc.Close()
 
 	msgChan := make(chan *nats.Msg, channelBufferSize) // Buffered channel to avoid blocking
 	sub, err := nc.ChanSubscribe(config.Mp4FilePathsTopic, msgChan)
 	if err != nil {
-		fmt.Errorf("failed to subscribe to topic %s: %w", config.Mp4FilePathsTopic, err)
+		panic(fmt.Sprintf("failed to subscribe to topic %s: %w", config.Mp4FilePathsTopic, err)
 	}
 	defer drainAndUnsubscribe(sub)
 

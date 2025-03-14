@@ -5,6 +5,10 @@ import (
 	"os"
 )
 
+const (
+	endOfInitialSegment = "moov"
+)
+
 func ExtractInitializationSegment(filePath string) ([]*MP4Box, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -28,7 +32,7 @@ func ExtractInitializationSegment(filePath string) ([]*MP4Box, error) {
 		}
 
 		boxes = append(boxes, box)
-		if box.Type == "moov" {
+		if box.Type == endOfInitialSegment {
 			log.Printf("Found moov box, stopping extraction")
 			break
 		}

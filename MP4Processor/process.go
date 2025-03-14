@@ -9,10 +9,6 @@ import (
 	"sync"
 )
 
-const (
-	channelBufferSize = 1024
-)
-
 type PublishFunc func(subject string, msg []byte) error
 
 func process(ctx context.Context, msgChan chan *nats.Msg, processResultTopic string, publish PublishFunc) error {

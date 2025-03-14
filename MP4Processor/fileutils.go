@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -30,7 +31,7 @@ func writeBox(file *os.File, box *MP4Box) error {
 
 	typeBytes := []byte(box.Type)
 	if len(typeBytes) != 4 {
-		panic("Type field must be exactly 4 bytes")
+		return fmt.Errorf("type field must be exactly 4 bytes")
 	}
 	if _, err := file.Write(typeBytes); err != nil {
 		return err
