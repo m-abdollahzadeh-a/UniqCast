@@ -22,7 +22,56 @@ connectToNATS(nc_url)
         process.exit(1);
     });
 
-
+/**
+ * @swagger
+ * /process:
+ *   post:
+ *     summary: Start a file processing task
+ *     description: Initiates a processing task for the file specified in the input body.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               filePath:
+ *                 type: string
+ *                 example: "/home/jan/Documents/video.mp4"
+ *             required:
+ *               - filePath
+ *     responses:
+ *       200:
+ *         description: Processing started successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Processing started"
+ *       400:
+ *         description: Invalid input (e.g., missing or invalid filePath)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid file path"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
 app.post('/process', handleStartProcess);
 
 /**
