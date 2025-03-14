@@ -7,6 +7,7 @@ services:
       - NATS_URL=nats://nats:4222
     volumes:
       - /tmp:/tmp  # NOTE: The processor needs to access to files on filesystem
+      - /tmp/outputs # NOTE: The processor needs to access to files on filesystem
     depends_on:
       - nats
 
