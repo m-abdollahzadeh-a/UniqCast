@@ -10,9 +10,9 @@ const handleMessage = async (msg) => {
     await createProtocol(jsonMessage.file_name, jsonMessage.status_code, jsonMessage.Message, jsonMessage.result_path);
 };
 
-const writeResultToPostgres = async () => {
+const writeResultToPostgres = async (nats_url) => {
     try {
-        await connectToNATS('nats://localhost:4222');
+        await connectToNATS(nats_url);
         subscribeToSubject('InitialSegmentFilePaths', handleMessage);
         process.on('SIGINT', async () => {
             await closeNATSConnection();
@@ -23,9 +23,9 @@ const writeResultToPostgres = async () => {
     }
 };
 
-const handleWriteToPostgres = async () => {
+const handleWriteToPostgres = async (nats_url) => {
     console.log('Starting NATS listener...');
-    await writeResultToPostgres();
+    await writeResultToPostgres(nats_url);
 };
 
 const handleReadAll = async () => {

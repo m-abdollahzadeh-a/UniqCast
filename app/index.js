@@ -3,13 +3,12 @@ const {connectToNATS, closeNATSConnection} = require('./handlers/natsHandler.js'
 const {handleStartProcess, handleListAll, handleDelete, handleListDetail} = require('./handlers/apiHandler.js');
 const {handleWriteToPostgres} = require('./handlers/postgresHandler.js');
 const setupSwagger = require('./swagger');
+require('dotenv').config();
 
 const app = express();
 setupSwagger(app);
 
-const port = 3000;
-const nc_url = "nats://localhost:4222"
-
+const { PORT: port = 3000, NATS_URL: nc_url = "nats://localhost:4222" } = process.env;
 
 app.use(express.json());
 
@@ -236,4 +235,4 @@ const syncDatabase = async () => {
 };
 syncDatabase();
 
-handleWriteToPostgres()
+handleWriteToPostgres(nc_url)
